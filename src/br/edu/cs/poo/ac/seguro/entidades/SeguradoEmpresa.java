@@ -1,9 +1,10 @@
 package br.edu.cs.poo.ac.seguro.entidades;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class SeguradoEmpresa extends Segurado {
+public class SeguradoEmpresa extends Segurado implements Serializable {
 
     private String cnpj;
     private double faturamento;

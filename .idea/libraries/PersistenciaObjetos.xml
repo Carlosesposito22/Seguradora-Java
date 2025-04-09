@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="PersistenciaObjetos">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../PersistenciaObjetos.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

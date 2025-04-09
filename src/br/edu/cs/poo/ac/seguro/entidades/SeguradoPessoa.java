@@ -1,9 +1,10 @@
 package br.edu.cs.poo.ac.seguro.entidades;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class SeguradoPessoa extends Segurado {
+public class SeguradoPessoa extends Segurado implements Serializable {
 
     private String cpf;
     private double renda;
@@ -30,5 +31,13 @@ public class SeguradoPessoa extends Segurado {
 
     public void setDataNascimento(LocalDate dataNascimento) {
         super.setDataCriacao(dataNascimento);
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
     }
 }

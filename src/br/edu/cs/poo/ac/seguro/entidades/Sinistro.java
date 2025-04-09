@@ -19,4 +19,6 @@ public class Sinistro {
     private String usuarioRegistro;
     private BigDecimal valorSinistro;
     private TipoSinistro tipo;
+
+
 }

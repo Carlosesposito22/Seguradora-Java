@@ -74,5 +74,6 @@ public class TesteVeiculoDAO extends TesteDAO {
 		ve = new Veiculo(placa, 2008, null, null, CategoriaVeiculo.ESPORTIVO);
 		boolean ret = dao.alterar(ve);
 		Assertions.assertTrue(ret);
+		//
 	}
 }

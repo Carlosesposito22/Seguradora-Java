@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.io.File;
 
-public abstract class TesteDAO {
+public abstract class TesteDAO extends TesteAbstrato {
 	protected CadastroObjetos cadastro;
 	
 	protected abstract Class getClasse();

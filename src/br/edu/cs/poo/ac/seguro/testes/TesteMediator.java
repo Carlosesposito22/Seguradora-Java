@@ -1,4 +1,8 @@
 package br.edu.cs.poo.ac.seguro.testes;
 
-public class TesteMediator {
+import br.edu.cesarschool.next.oo.persistenciaobjetos.CadastroObjetos;
+import br.edu.cs.poo.ac.seguro.mediators.SeguradoMediator;
+
+public abstract class TesteMediator extends TesteAbstrato {
+
 }

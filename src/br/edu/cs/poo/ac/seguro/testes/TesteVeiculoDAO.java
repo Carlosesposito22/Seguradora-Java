@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class TesteVeiculoDAO extends TesteDAO {
+
 	private VeiculoDAO dao = new VeiculoDAO();
+
 	protected Class getClasse() {
 		return Veiculo.class;
 	}
@@ -74,6 +76,5 @@ public class TesteVeiculoDAO extends TesteDAO {
 		ve = new Veiculo(placa, 2008, null, null, CategoriaVeiculo.ESPORTIVO);
 		boolean ret = dao.alterar(ve);
 		Assertions.assertTrue(ret);
-		//
 	}
 }

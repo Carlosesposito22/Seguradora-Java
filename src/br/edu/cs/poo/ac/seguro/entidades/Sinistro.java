@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class Sinistro implements Serializable {
 
-    private String numero;
+    @NonNull private String numero;
     @NonNull private Veiculo veiculo;
     @NonNull private LocalDateTime dataHoraSinistro;
     @NonNull private LocalDateTime dataHoraRegistro;

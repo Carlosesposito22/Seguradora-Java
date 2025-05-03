@@ -3,6 +3,7 @@ package br.edu.cs.poo.ac.seguro.mediators;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import br.edu.cs.poo.ac.seguro.daos.ApoliceDAO;
@@ -151,10 +152,14 @@ public class ApoliceMediator {
 
         int anoAnterior = hoje.minusYears(1).getYear();
         boolean temSinistroAnoAnterior = false;
+
         for (Sinistro sin : daoSin.buscarTodos()) {
-            boolean mesmoVeiculo = sin.getVeiculo().equals(novoVeiculo);
+            Veiculo vSin = sin.getVeiculo();
+            boolean mesmaPlaca = vSin != null &&
+                    vSin.getPlaca().equalsIgnoreCase(novoVeiculo.getPlaca());
             boolean mesmoAno = sin.getDataHoraSinistro().getYear() == anoAnterior;
-            if (mesmoVeiculo && mesmoAno) {
+
+            if (mesmaPlaca && mesmoAno) {
                 temSinistroAnoAnterior = true;
                 break;
             }
@@ -199,12 +204,12 @@ public class ApoliceMediator {
 
     public String excluirApolice(String numero) {
         if (numero == null || numero.trim().isEmpty()) {
-            return "Número da apólice inválido.";
+            return "Número deve ser informado";
         }
 
         Apolice apolice = daoApo.buscar(numero);
         if (apolice == null) {
-            return "Apólice não encontrada.";
+            return "Apólice inexistente";
         }
 
         List<Sinistro> sinistros = daoSin.buscarTodos();
@@ -213,11 +218,11 @@ public class ApoliceMediator {
         for (Sinistro sin : sinistros) {
             int anoSinistro = sin.getDataHoraSinistro().getYear();
             if (anoSinistro == anoApolice && sin.getVeiculo().equals(apolice.getVeiculo())) {
-                return "Exclusão não permitida: existe sinistro no mesmo ano para o mesmo veículo.";
+                return "Existe sinistro cadastrado para o veículo em questão e no mesmo ano da apólice";
             }
         }
 
         daoApo.excluir(numero);
-        return "Apólice excluída com sucesso.";
+        return null;
     }
 }

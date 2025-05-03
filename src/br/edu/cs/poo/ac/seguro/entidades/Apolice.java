@@ -8,13 +8,13 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class Apolice implements Serializable {
 
-    @NonNull private String numero;
-    @NonNull private Veiculo veiculo;
-    @NonNull private BigDecimal valorFranquia;
-    @NonNull private BigDecimal valorPremio;
-    @NonNull private BigDecimal valorMaximoSegurado;
-    @NonNull private LocalDate dataInicioVigencia;
+    private String numero;
+    private Veiculo veiculo;
+    private BigDecimal valorFranquia;
+    private BigDecimal valorPremio;
+    private BigDecimal valorMaximoSegurado;
+    private LocalDate dataInicioVigencia;
 }

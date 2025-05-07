@@ -43,13 +43,10 @@ public class TesteApoliceDAO extends TesteDAO {
 
     @Test
     public void teste02() {
-
-        String numero = "0";
-
-        boolean ret = dao.alterar(new Apolice("0", veiculo, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, LocalDate.now()));
-        Assertions.assertFalse(ret);
-
-
+        String numero = "1";
+        cadastro.incluir(new Apolice("0", veiculo, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, LocalDate.now()),numero);
+        Apolice apo = dao.buscar("2");
+        Assertions.assertNull(apo);
     }
 
     @Test

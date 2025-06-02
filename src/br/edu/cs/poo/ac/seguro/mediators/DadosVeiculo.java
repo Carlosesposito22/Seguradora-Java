@@ -13,7 +13,6 @@ public class DadosVeiculo {
     private int ano;
     private BigDecimal valorMaximoSegurado;
     private int codigoCategoria;
-
     void setCodigoCategoria(int codigoCategoria) {
         this.codigoCategoria = codigoCategoria;
     }

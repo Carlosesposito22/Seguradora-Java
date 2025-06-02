@@ -5,7 +5,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 
-public class Segurado implements Serializable {
+public abstract class Segurado implements Serializable, Registro{
+
+    private static final long serialVersionUID = 1L;
 
     private String nome;
     private Endereco endereco;
@@ -39,8 +41,8 @@ public class Segurado implements Serializable {
         return dataCriacao;
     }
 
-    protected void setDataCriacao(LocalDate dataCriacao) {
-        this.dataCriacao = dataCriacao;
+    protected void setDataCriacao(LocalDate data) {
+        this.dataCriacao = data;
     }
 
     public BigDecimal getBonus() {
@@ -48,13 +50,13 @@ public class Segurado implements Serializable {
     }
 
     public int getIdade() {
-        return Period.between(this.dataCriacao, LocalDate.now()).getYears();
+        LocalDate agora = LocalDate.now();
+        int idade = Period.between(getDataCriacao(), agora).getYears();
+        return idade;
     }
 
     public void creditarBonus(BigDecimal valor) {
-        if (valor.compareTo(BigDecimal.ZERO) > 0) {
-            bonus = bonus.add(valor);
-        }
+        bonus = bonus.add(valor);
     }
 
     public void debitarBonus(BigDecimal valor) {
@@ -62,4 +64,6 @@ public class Segurado implements Serializable {
             bonus = bonus.subtract(valor);
         }
     }
+
+    public abstract boolean isEmpresa();
 }

@@ -41,7 +41,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
     private TextField txtLogradouro;
     private TextField txtNumero;
     private TextField txtComplemento;
-    private TextField txtBairro;
+
     private TextField txtCidade;
     private TextField txtEstado;
     private TextField txtCep;
@@ -129,9 +129,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         txtComplemento.setPromptText("Apto, Bloco, Sala");
         txtComplemento.setMaxWidth(150);
 
-        txtBairro = new TextField();
-        txtBairro.setPromptText("Bairro");
-        txtBairro.setMaxWidth(150);
+
 
         txtCidade = new TextField();
         txtCidade.setPromptText("Cidade");
@@ -200,9 +198,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         grid.add(txtComplemento, 1, row, 2, 1);
         row++;
 
-        grid.add(new Label("Bairro:"), 0, row);
-        grid.add(txtBairro, 1, row, 2, 1);
-        row++;
+
 
         grid.add(new Label("Cidade:"), 0, row);
         grid.add(txtCidade, 1, row);
@@ -244,7 +240,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         txtLogradouro.setFocusTraversable(true);
         txtNumero.setFocusTraversable(true);
         txtComplemento.setFocusTraversable(true);
-        txtBairro.setFocusTraversable(true);
+
         txtCidade.setFocusTraversable(true);
         txtEstado.setFocusTraversable(true);
         txtCep.setFocusTraversable(true);
@@ -294,7 +290,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         txtLogradouro.setEditable(camposEditaveis);
         txtNumero.setEditable(camposEditaveis);
         txtComplemento.setEditable(camposEditaveis);
-        txtBairro.setEditable(camposEditaveis);
+
         txtCidade.setEditable(camposEditaveis);
         txtEstado.setEditable(camposEditaveis);
         txtCep.setEditable(camposEditaveis);
@@ -389,25 +385,75 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         });
     }
 
+    // --- Máscara de CEP corrigida para o formato 99999-999 (ao digitar) ---
     private void setupCepMask(TextField textField) {
-        Pattern pattern = Pattern.compile("[0-9-]*");
-        UnaryOperator<Change> filter = c -> {
-            if (pattern.matcher(c.getControlNewText()).matches()) {
-                String newText = c.getControlNewText();
-                if (newText.length() > 9) return null;
+        textField.setTextFormatter(new TextFormatter<String>(change -> {
+            String newText = change.getControlNewText();
+            String cleanedText = newText.replaceAll("\\D", ""); // Remove tudo que não é dígito
 
-                if (newText.length() == 5 && !c.getControlNewText().contains("-")) {
-                    c.setText(newText + "-");
-                    c.setAnchor(c.getAnchor() + 1);
-                    c.setCaretPosition(c.getCaretPosition() + 1);
-                }
-                return c;
-            } else {
-                return null;
+            // Limita a 8 dígitos numéricos (formato limpo do CEP)
+            if (cleanedText.length() > 8) {
+                return null; // Não permite mais de 8 dígitos
             }
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        textField.setTextFormatter(textFormatter);
+
+            // Aplica a máscara: insere o hífen se houver 5 dígitos
+            StringBuilder formattedText = new StringBuilder();
+            for (int i = 0; i < cleanedText.length(); i++) {
+                formattedText.append(cleanedText.charAt(i));
+                if (i == 4 && cleanedText.length() > 5) { // Se já digitou 5 e há mais dígitos, insere o hífen
+                    formattedText.append("-");
+                }
+            }
+
+            // Corrige a inserção do hífen para o caso exato de 5 dígitos
+            if (cleanedText.length() == 5 && formattedText.length() == 5) {
+                formattedText.append("-");
+            }
+
+
+            // Atualiza o change para refletir o texto formatado
+            change.setText(formattedText.toString());
+            // Define o range do texto a ser substituído (todo o texto atual)
+            change.setRange(0, change.getControlText().length());
+            // Posiciona o cursor no final do novo texto
+            change.setCaretPosition(formattedText.length());
+            // Define o ponto de âncora do cursor (útil para seleções)
+            change.setAnchor(formattedText.length());
+
+            return change;
+        }));
+
+        // Adiciona um listener para validar e garantir o formato final ao perder o foco
+        textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Se perdeu o foco
+                String rawCep = textField.getText().trim();
+                String cleanCep = rawCep.replaceAll("\\D", ""); // Remove não dígitos
+                if (!cleanCep.isEmpty()) {
+                    if (cleanCep.length() == 8) { // CEP deve ter 8 dígitos
+                        textField.setText(formatCep(cleanCep)); // Garante o formato final (e.g., 12345-678)
+                        textField.setStyle(""); // Remove estilo de erro
+                    } else {
+                        textField.setStyle("-fx-border-color: red;");
+                        showAlert(Alert.AlertType.ERROR, "Erro de Validação", "CEP deve ter 8 dígitos.");
+                    }
+                } else {
+                    textField.setStyle(""); // Remove estilo de erro se o campo for limpo
+                }
+            }
+        });
+    }
+
+    // Método auxiliar para formatar CEP (para exibição final)
+    private String formatCep(String cep) {
+        if (cep == null || cep.length() != 8) {
+            return cep; // Retorna como está se não tiver 8 dígitos limpos
+        }
+        return cep.substring(0, 5) + "-" + cep.substring(5, 8);
+    }
+
+    // Método auxiliar para limpar CEP (remover formatação para lógica de negócio/DAO)
+    private String cleanCep(String cep) {
+        return cep != null ? cep.replaceAll("\\D", "") : null;
     }
 
 
@@ -545,7 +591,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         txtLogradouro.clear();
         txtNumero.clear();
         txtComplemento.clear();
-        txtBairro.clear();
+
         txtCidade.clear();
         txtEstado.clear();
         txtCep.clear();
@@ -563,7 +609,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
         txtLogradouro.clear();
         txtNumero.clear();
         txtComplemento.clear();
-        txtBairro.clear();
+
         txtCidade.clear();
         txtEstado.clear();
         txtCep.clear();
@@ -592,7 +638,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
             txtLogradouro.clear();
             txtNumero.clear();
             txtComplemento.clear();
-            txtBairro.clear();
+
             txtCidade.clear();
             txtEstado.clear();
             txtCep.clear();

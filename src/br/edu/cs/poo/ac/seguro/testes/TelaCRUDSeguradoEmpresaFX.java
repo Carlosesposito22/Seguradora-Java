@@ -389,55 +389,45 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
     private void setupCepMask(TextField textField) {
         textField.setTextFormatter(new TextFormatter<String>(change -> {
             String newText = change.getControlNewText();
-            String cleanedText = newText.replaceAll("\\D", ""); // Remove tudo que não é dígito
+            String cleanedText = newText.replaceAll("\\D", "");
 
-            // Limita a 8 dígitos numéricos (formato limpo do CEP)
             if (cleanedText.length() > 8) {
-                return null; // Não permite mais de 8 dígitos
+                return null;
             }
 
-            // Aplica a máscara: insere o hífen se houver 5 dígitos
             StringBuilder formattedText = new StringBuilder();
             for (int i = 0; i < cleanedText.length(); i++) {
                 formattedText.append(cleanedText.charAt(i));
-                if (i == 4 && cleanedText.length() > 5) { // Se já digitou 5 e há mais dígitos, insere o hífen
+                if (i == 4 && cleanedText.length() > 5) {
                     formattedText.append("-");
                 }
             }
 
-            // Corrige a inserção do hífen para o caso exato de 5 dígitos
-            if (cleanedText.length() == 5 && formattedText.length() == 5) {
-                formattedText.append("-");
-            }
 
 
-            // Atualiza o change para refletir o texto formatado
+
             change.setText(formattedText.toString());
-            // Define o range do texto a ser substituído (todo o texto atual)
             change.setRange(0, change.getControlText().length());
-            // Posiciona o cursor no final do novo texto
             change.setCaretPosition(formattedText.length());
-            // Define o ponto de âncora do cursor (útil para seleções)
             change.setAnchor(formattedText.length());
 
             return change;
         }));
 
-        // Adiciona um listener para validar e garantir o formato final ao perder o foco
         textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) { // Se perdeu o foco
+            if (!newVal) {
                 String rawCep = textField.getText().trim();
-                String cleanCep = rawCep.replaceAll("\\D", ""); // Remove não dígitos
+                String cleanCep = rawCep.replaceAll("\\D", "");
                 if (!cleanCep.isEmpty()) {
-                    if (cleanCep.length() == 8) { // CEP deve ter 8 dígitos
-                        textField.setText(formatCep(cleanCep)); // Garante o formato final (e.g., 12345-678)
-                        textField.setStyle(""); // Remove estilo de erro
+                    if (cleanCep.length() == 8) {
+                        textField.setText(formatCep(cleanCep));
+                        textField.setStyle("");
                     } else {
                         textField.setStyle("-fx-border-color: red;");
                         showAlert(Alert.AlertType.ERROR, "Erro de Validação", "CEP deve ter 8 dígitos.");
                     }
                 } else {
-                    textField.setStyle(""); // Remove estilo de erro se o campo for limpo
+                    textField.setStyle("");
                 }
             }
         });
@@ -446,7 +436,7 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
     // Método auxiliar para formatar CEP (para exibição final)
     private String formatCep(String cep) {
         if (cep == null || cep.length() != 8) {
-            return cep; // Retorna como está se não tiver 8 dígitos limpos
+            return cep;
         }
         return cep.substring(0, 5) + "-" + cep.substring(5, 8);
     }
@@ -455,6 +445,8 @@ public class TelaCRUDSeguradoEmpresaFX extends Application {
     private String cleanCep(String cep) {
         return cep != null ? cep.replaceAll("\\D", "") : null;
     }
+
+
 
 
     // --- Operações CRUD ---

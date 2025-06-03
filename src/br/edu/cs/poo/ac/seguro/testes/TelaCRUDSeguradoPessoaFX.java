@@ -308,6 +308,7 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
                 return null;
             }
         };
+
         TextFormatter<String> textFormatter = new TextFormatter<>(filter);
         textField.setTextFormatter(textFormatter);
     }
@@ -378,24 +379,57 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     }
 
     private void setupCepMask(TextField textField) {
-        Pattern pattern = Pattern.compile("[0-9-]*");
-        UnaryOperator<Change> filter = c -> {
-            if (pattern.matcher(c.getControlNewText()).matches()) {
-                String newText = c.getControlNewText();
-                if (newText.length() > 9) return null;
+        textField.setTextFormatter(new TextFormatter<String>(change -> {
+            String newText = change.getControlNewText();
+            String cleanedText = newText.replaceAll("\\D", "");
 
-                if (newText.length() == 5 && !c.getControlNewText().contains("-")) {
-                    c.setText(newText + "-");
-                    c.setAnchor(c.getAnchor() + 1);
-                    c.setCaretPosition(c.getCaretPosition() + 1);
-                }
-                return c;
-            } else {
+            if (cleanedText.length() > 8) {
                 return null;
             }
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        textField.setTextFormatter(textFormatter);
+
+            StringBuilder formattedText = new StringBuilder();
+            for (int i = 0; i < cleanedText.length(); i++) {
+                formattedText.append(cleanedText.charAt(i));
+                if (i == 4 && cleanedText.length() > 5) {
+                    formattedText.append("-");
+                }
+            }
+
+
+
+
+            change.setText(formattedText.toString());
+            change.setRange(0, change.getControlText().length());
+            change.setCaretPosition(formattedText.length());
+            change.setAnchor(formattedText.length());
+
+            return change;
+        }));
+
+        textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                String rawCep = textField.getText().trim();
+                String cleanCep = rawCep.replaceAll("\\D", "");
+                if (!cleanCep.isEmpty()) {
+                    if (cleanCep.length() == 8) {
+                        textField.setText(formatCep(cleanCep));
+                        textField.setStyle("");
+                    } else {
+                        textField.setStyle("-fx-border-color: red;");
+                        showAlert(Alert.AlertType.ERROR, "Erro de Validação", "CEP deve ter 8 dígitos.");
+                    }
+                } else {
+                    textField.setStyle("");
+                }
+            }
+        });
+    }
+
+    private String formatCep(String cep) {
+        if (cep == null || cep.length() != 8) {
+            return cep;
+        }
+        return cep.substring(0, 5) + "-" + cep.substring(5, 8);
     }
 
 
@@ -410,7 +444,7 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
             return;
         }
         if (!ValidadorCpfCnpj.ehCpfValido(cpf)) {
-            showAlert(Alert.AlertType.ERROR, "Busca", "CPF inválido.");
+            showAlert(Alert.AlertType.ERROR, "Busca", "CPF inválido, deve ter no minimo 11 digitos.");
             setEstado(EstadoTela.INICIAL);
             return;
         }

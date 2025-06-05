@@ -1,15 +1,14 @@
 package br.edu.cs.poo.ac.seguro.testes;
 
-
 import br.edu.cs.poo.ac.seguro.mediators.ApoliceMediator;
-import br.edu.cs.poo.ac.seguro.mediators.DadosVeiculo; // Note que é DadosVeiculo para o ApoliceMediator
+import br.edu.cs.poo.ac.seguro.mediators.DadosVeiculo;
 import br.edu.cs.poo.ac.seguro.mediators.RetornoInclusaoApolice;
 import br.edu.cs.poo.ac.seguro.entidades.CategoriaVeiculo;
-import br.edu.cs.poo.ac.seguro.entidades.Endereco; // Para criar dados de teste
-import br.edu.cs.poo.ac.seguro.entidades.SeguradoEmpresa; // Para criar dados de teste
-import br.edu.cs.poo.ac.seguro.entidades.SeguradoPessoa; // Para criar dados de teste
-import br.edu.cs.poo.ac.seguro.daos.SeguradoEmpresaDAO; // Para inclusão de dados de teste
-import br.edu.cs.poo.ac.seguro.daos.SeguradoPessoaDAO; // Para inclusão de dados de teste
+import br.edu.cs.poo.ac.seguro.entidades.Endereco;
+import br.edu.cs.poo.ac.seguro.entidades.SeguradoEmpresa;
+import br.edu.cs.poo.ac.seguro.entidades.SeguradoPessoa;
+import br.edu.cs.poo.ac.seguro.daos.SeguradoEmpresaDAO;
+import br.edu.cs.poo.ac.seguro.daos.SeguradoPessoaDAO;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -25,9 +24,10 @@ import javafx.util.StringConverter;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException; // Embora não use data/hora diretamente, é bom manter
+import java.util.ArrayList; // Import for ArrayList
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List; // Import for List
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -66,7 +66,7 @@ public class TelaInclusaoApoliceFX extends Application {
         addListeners();
         setupTabOrder();
 
-        Scene scene = new Scene(grid, 500, 380); // Tamanho ajustado
+        Scene scene = new Scene(grid, 500, 380);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -75,21 +75,22 @@ public class TelaInclusaoApoliceFX extends Application {
         txtCpfCnpj = new TextField();
         txtCpfCnpj.setPromptText("CPF ou CNPJ");
         txtCpfCnpj.setMaxWidth(150);
+        setupCpfCnpjMaskAndValidation(txtCpfCnpj); // Apply new CPF/CNPJ validation
 
         txtPlaca = new TextField();
         txtPlaca.setPromptText("Ex: ABC1234");
         txtPlaca.setMaxWidth(100);
+        setupPlateMaskAndValidation(txtPlaca);
 
         txtAno = new TextField();
         txtAno.setPromptText("Ex: 2023");
         txtAno.setMaxWidth(80);
-        setupYearMask(txtAno); // Máscara para ano
+        setupYearMask(txtAno);
 
         txtValorMaximoSegurado = new TextField();
         txtValorMaximoSegurado.setPromptText("Ex: 100000,00");
-        setupCurrencyMask(txtValorMaximoSegurado); // Máscara para valor
+        setupCurrencyMask(txtValorMaximoSegurado);
 
-        // Combo Box para CategoriaVeiculo
         cmbCategoriaVeiculo = new ComboBox<>();
         cmbCategoriaVeiculo.getItems().addAll(
                 Arrays.stream(CategoriaVeiculo.values())
@@ -154,8 +155,36 @@ public class TelaInclusaoApoliceFX extends Application {
 
     // --- Máscaras e Validações ---
 
+    private void setupCpfCnpjMaskAndValidation(TextField textField) {
+        Pattern pattern = Pattern.compile("\\d*"); // Allow only digits
+        UnaryOperator<Change> filter = c -> {
+            String newText = c.getControlNewText();
+            if (pattern.matcher(newText).matches() && newText.length() <= 14) { // Max 14 digits
+                return c;
+            } else {
+                return null;
+            }
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        textField.setTextFormatter(textFormatter);
+
+        textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // If focus is lost
+                String text = textField.getText().trim();
+                if (!text.isEmpty()) {
+                    if (text.length() == 11 || text.length() == 14) {
+                        textField.setStyle("");
+                    } else {
+                        textField.setStyle("-fx-border-color: red;");
+                    }
+                } else {
+                    textField.setStyle(""); // Clear error style if empty
+                }
+            }
+        });
+    }
+
     private void setupYearMask(TextField textField) {
-        // Permite apenas 4 dígitos numéricos
         Pattern pattern = Pattern.compile("\\d{0,4}");
         UnaryOperator<Change> filter = c -> {
             if (pattern.matcher(c.getControlNewText()).matches()) {
@@ -168,20 +197,18 @@ public class TelaInclusaoApoliceFX extends Application {
         textField.setTextFormatter(textFormatter);
 
         textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) { // Se perdeu o foco
+            if (!newVal) {
                 String text = textField.getText().trim();
                 if (!text.isEmpty()) {
                     try {
                         int ano = Integer.parseInt(text);
-                        if (ano < 2020 || ano > 2025) { // Validação de ano conforme ApoliceMediator
+                        if (ano < 2020 || ano > 2025) {
                             textField.setStyle("-fx-border-color: red;");
-                            showAlert(Alert.AlertType.ERROR, "Erro de Validação", "Ano tem que estar entre 2020 e 2025, incluindo estes.");
                         } else {
                             textField.setStyle("");
                         }
                     } catch (NumberFormatException e) {
                         textField.setStyle("-fx-border-color: red;");
-                        showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Ano inválido. Digite apenas números.");
                     }
                 } else {
                     textField.setStyle("");
@@ -209,12 +236,46 @@ public class TelaInclusaoApoliceFX extends Application {
                 if (!text.isEmpty()) {
                     try {
                         String cleanText = text.replace(".", "").replace(",", ".");
-                        BigDecimal value = new BigDecimal(cleanText); // Usar BigDecimal para precisão monetária
+                        BigDecimal value = new BigDecimal(cleanText);
                         textField.setText(DECIMAL_FORMAT.format(value));
                         textField.setStyle("");
                     } catch (NumberFormatException e) {
                         textField.setStyle("-fx-border-color: red;");
-                        showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Valor inválido. Use apenas números, vírgula para centavos e ponto para milhares (opcional).");
+                    }
+                } else {
+                    textField.setStyle("");
+                }
+            }
+        });
+    }
+
+    private void setupPlateMaskAndValidation(TextField textField) {
+        Pattern platePattern = Pattern.compile("[A-Z]{0,3}\\d{0,4}");
+        UnaryOperator<Change> filter = c -> {
+            String newText = c.getControlNewText().toUpperCase(); // Convert to uppercase immediately
+            if (newText.length() > 7) {
+                return null;
+            }
+            if (platePattern.matcher(newText).matches()) {
+                c.setText(newText); // Set the text to uppercase
+                return c;
+            } else {
+                return null;
+            }
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        textField.setTextFormatter(textFormatter);
+
+        textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                String text = textField.getText().trim();
+                Pattern finalPlatePattern = Pattern.compile("[A-Z]{3}\\d{4}");
+
+                if (!text.isEmpty()) {
+                    if (finalPlatePattern.matcher(text).matches()) {
+                        textField.setStyle("");
+                    } else {
+                        textField.setStyle("-fx-border-color: red;");
                     }
                 } else {
                     textField.setStyle("");
@@ -226,46 +287,101 @@ public class TelaInclusaoApoliceFX extends Application {
     // --- Lógica de Negócio e UI ---
 
     private void incluirApolice() {
-        try {
-            // Validar formatos antes de chamar o mediator
-            if (txtAno.getStyle().contains("red") || txtValorMaximoSegurado.getStyle().contains("red")) {
-                showAlert(Alert.AlertType.ERROR, "Erro de Entrada", "Corrija os campos com formato inválido antes de incluir.");
-                return;
-            }
+        List<String> errosFormato = new ArrayList<>();
 
-            String cpfCnpj = txtCpfCnpj.getText().trim();
-            String placa = txtPlaca.getText().trim();
-            int ano = 0;
-            if (!txtAno.getText().trim().isEmpty()) {
-                ano = Integer.parseInt(txtAno.getText().trim());
-            }
+        // Validate CPF/CNPJ
+        String cpfCnpj = txtCpfCnpj.getText().trim();
+        if (cpfCnpj.isEmpty()) {
+            errosFormato.add("CPF/CNPJ do segurado é obrigatório.");
+            txtCpfCnpj.setStyle("-fx-border-color: red;");
+        } else if (cpfCnpj.length() != 11 && cpfCnpj.length() != 14) {
+            errosFormato.add("CPF/CNPJ inválido. Digite 11 dígitos para CPF ou 14 para CNPJ.");
+            txtCpfCnpj.setStyle("-fx-border-color: red;");
+        } else {
+            txtCpfCnpj.setStyle("");
+        }
 
-            BigDecimal valorMaximoSegurado = null;
-            if (!txtValorMaximoSegurado.getText().trim().isEmpty()) {
-                String cleanValor = txtValorMaximoSegurado.getText().trim().replace(".", "").replace(",", ".");
+        // Validate Placa
+        String placa = txtPlaca.getText().trim();
+        Pattern finalPlatePattern = Pattern.compile("[A-Z]{3}\\d{4}");
+        if (placa.isEmpty()) {
+            errosFormato.add("Placa do veículo é obrigatória.");
+            txtPlaca.setStyle("-fx-border-color: red;");
+        } else if (!finalPlatePattern.matcher(placa).matches()) {
+            errosFormato.add("Placa inválida. Deve ter 3 letras maiúsculas seguidas de 4 números (Ex: ABC1234).");
+            txtPlaca.setStyle("-fx-border-color: red;");
+        } else {
+            txtPlaca.setStyle("");
+        }
+
+        // Validate Ano
+        int ano = 0;
+        String anoText = txtAno.getText().trim();
+        if (anoText.isEmpty()) {
+            errosFormato.add("Ano do veículo é obrigatório.");
+            txtAno.setStyle("-fx-border-color: red;");
+        } else {
+            try {
+                ano = Integer.parseInt(anoText);
+                if (ano < 2020 || ano > 2025) {
+                    errosFormato.add("Ano tem que estar entre 2020 e 2025, incluindo estes.");
+                    txtAno.setStyle("-fx-border-color: red;");
+                } else {
+                    txtAno.setStyle("");
+                }
+            } catch (NumberFormatException e) {
+                errosFormato.add("Ano inválido. Digite apenas números.");
+                txtAno.setStyle("-fx-border-color: red;");
+            }
+        }
+
+        // Validate Valor Máximo Segurado
+        BigDecimal valorMaximoSegurado = null;
+        String valorMaximoSeguradoText = txtValorMaximoSegurado.getText().trim();
+        if (valorMaximoSeguradoText.isEmpty()) {
+            errosFormato.add("Valor Máximo Segurado é obrigatório.");
+            txtValorMaximoSegurado.setStyle("-fx-border-color: red;");
+        } else {
+            try {
+                String cleanValor = valorMaximoSeguradoText.replace(".", "").replace(",", ".");
                 valorMaximoSegurado = new BigDecimal(cleanValor);
+                txtValorMaximoSegurado.setStyle("");
+            } catch (NumberFormatException e) {
+                errosFormato.add("Valor Máximo Segurado inválido. Use apenas números, vírgula para centavos e ponto para milhares (opcional).");
+                txtValorMaximoSegurado.setStyle("-fx-border-color: red;");
             }
+        }
 
-            CategoriaVeiculo categoriaSelecionada = cmbCategoriaVeiculo.getSelectionModel().getSelectedItem();
+        // Check if TipoSinistro is selected (if it were a ComboBox validation)
+        CategoriaVeiculo categoriaSelecionada = cmbCategoriaVeiculo.getSelectionModel().getSelectedItem();
+        if (categoriaSelecionada == null) {
+            errosFormato.add("Categoria do veículo é obrigatória.");
+            cmbCategoriaVeiculo.setStyle("-fx-border-color: red;");
+        } else {
+            cmbCategoriaVeiculo.setStyle("");
+        }
+
+
+        // If there are format errors, display all of them and stop
+        if (!errosFormato.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Erro de Entrada", "Corrija os campos com formato inválido:\n" + String.join("\n", errosFormato));
+            return;
+        }
+
+        // Proceed with business logic if no format errors
+        try {
             int codigoCategoria = (categoriaSelecionada != null) ? categoriaSelecionada.getCodigo() : 0;
-
-            // Criar DadosVeiculo para o mediator
             DadosVeiculo dados = new DadosVeiculo(cpfCnpj, placa, ano, valorMaximoSegurado, codigoCategoria);
-
             RetornoInclusaoApolice retorno = mediator.incluirApolice(dados);
 
-            // A lógica de sucesso/erro agora é baseada na sua RetornoInclusaoApolice
-            if (retorno.getMensagemErro() == null) { // Sucesso se mensagemErro é null
+            if (retorno.getMensagemErro() == null) {
                 showAlert(Alert.AlertType.INFORMATION, "Sucesso", "Apólice incluída com sucesso! Anote o número da apólice: " + retorno.getNumeroApolice());
                 limparCampos();
-            } else { // Erro se mensagemErro não é null
+            } else {
                 showAlert(Alert.AlertType.ERROR, "Erro de Validação", "Problemas na inclusão da apólice:\n" + retorno.getMensagemErro());
             }
 
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Verifique se o Ano e Valor Máximo Segurado estão corretos. Detalhes: " + e.getMessage());
-            e.printStackTrace();
-        } catch (RuntimeException e) { // Captura as RuntimeExceptions do construtor de RetornoInclusaoApolice
+        } catch (RuntimeException e) {
             showAlert(Alert.AlertType.ERROR, "Erro Interno", "Erro inesperado na construção do retorno: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
@@ -294,16 +410,15 @@ public class TelaInclusaoApoliceFX extends Application {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        alert.getDialogPane().setMinWidth(1000);
         alert.showAndWait();
     }
 
-    public static void main(String[] args) { // Este main lançará esta aplicação diretamente
-        // Inicializa DAOs e adiciona dados de teste para a Apolice
+    public static void main(String[] args) {
         try {
             SeguradoPessoaDAO segPesDAO = new SeguradoPessoaDAO();
             SeguradoEmpresaDAO segEmpDAO = new SeguradoEmpresaDAO();
 
-            // Adicionar Segurado Pessoa para teste (CPF válido)
             Endereco endPessoa = new Endereco("Rua P", "11111-111", "10", "", "Brasil", "PE", "Recife");
             SeguradoPessoa pessoa = new SeguradoPessoa("Cliente Pessoa", endPessoa, LocalDate.of(1980, 5, 10), new BigDecimal("500.00"),"12345678909",1000);
             if (segPesDAO.buscar(pessoa.getIdUnico()) == null) {
@@ -316,7 +431,6 @@ public class TelaInclusaoApoliceFX extends Application {
                 System.out.println("Segurado Pessoa 12345678909 já existe.");
             }
 
-            // Adicionar Segurado Empresa para teste (CNPJ válido)
             Endereco endEmpresa = new Endereco("Av. E", "22222-222", "200", "Sala 1", "Brasil", "SP", "São Paulo");
             SeguradoEmpresa empresa = new SeguradoEmpresa( "Empresa Teste", endEmpresa, LocalDate.of(2000, 1, 1), new BigDecimal("1000.00"), "11222333000144",1000,false);
             if (segEmpDAO.buscar(empresa.getIdUnico()) == null) {
@@ -329,7 +443,6 @@ public class TelaInclusaoApoliceFX extends Application {
                 System.out.println("Segurado Empresa 11222333000144 já existe.");
             }
 
-
         } catch (RuntimeException e) {
             System.err.println("Erro na inicialização dos dados de teste: " + e.getMessage());
         } catch (Exception e) {
@@ -337,6 +450,6 @@ public class TelaInclusaoApoliceFX extends Application {
             e.printStackTrace();
         }
 
-        launch(args); // Lança a aplicação JavaFX
+        launch(args);
     }
 }

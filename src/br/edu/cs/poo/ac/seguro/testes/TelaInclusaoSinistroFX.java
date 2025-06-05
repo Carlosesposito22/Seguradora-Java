@@ -217,45 +217,83 @@ public class TelaInclusaoSinistroFX extends Application {
 
     private void incluirSinistro() {
         try {
-            if (txtDataHoraSinistro.getStyle().contains("red") || txtValorSinistro.getStyle().contains("red")) {
-                showAlert(Alert.AlertType.ERROR, "Erro de Entrada", "Corrija os campos com formato inválido antes de incluir.");
+            // Lista para coletar todas as mensagens de erro de formato
+            java.util.List<String> errosFormato = new java.util.ArrayList<>();
+
+            // Validação da Placa
+            String placa = txtPlaca.getText().trim();
+            Pattern finalPlatePattern = Pattern.compile("[A-Z]{3}\\d{4}");
+            if (placa.isEmpty() || !finalPlatePattern.matcher(placa).matches()) {
+                txtPlaca.setStyle("-fx-border-color: red;");
+                errosFormato.add("Placa inválida. Deve ter 3 letras maiúsculas seguidas de 4 números (Ex: ABC1234).");
+            } else {
+                txtPlaca.setStyle(""); // Limpa o estilo se for válido
+            }
+
+            // Validação da Data/Hora do Sinistro
+            LocalDateTime dataHoraSinistro = null;
+            if (txtDataHoraSinistro.getText().trim().isEmpty()) {
+                errosFormato.add("Data/Hora do sinistro é obrigatória.");
+                txtDataHoraSinistro.setStyle("-fx-border-color: red;");
+            } else {
+                try {
+                    dataHoraSinistro = LocalDateTime.parse(txtDataHoraSinistro.getText().trim(), DATE_TIME_FORMATTER);
+                    txtDataHoraSinistro.setStyle(""); // Limpa o estilo se for válido
+                } catch (DateTimeParseException e) {
+                    txtDataHoraSinistro.setStyle("-fx-border-color: red;");
+                    errosFormato.add("Data/Hora do sinistro inválida. Use o formato dd/MM/yyyy HH:mm:ss.");
+                }
+            }
+
+            // Validação do Valor do Sinistro
+            BigDecimal valorSinistro = null;
+            if (txtValorSinistro.getText().trim().isEmpty()) {
+                errosFormato.add("Valor do sinistro é obrigatório.");
+                txtValorSinistro.setStyle("-fx-border-color: red;");
+            } else {
+                try {
+                    String cleanValor = txtValorSinistro.getText().trim().replace(".", "").replace(",", ".");
+                    valorSinistro = new BigDecimal(cleanValor);
+                    txtValorSinistro.setStyle(""); // Limpa o estilo se for válido
+                } catch (NumberFormatException e) {
+                    txtValorSinistro.setStyle("-fx-border-color: red;");
+                    errosFormato.add("Valor do sinistro inválido. Use apenas números, vírgula para centavos e ponto para milhares (opcional).");
+                }
+            }
+
+            // Se houver erros de formato, exibe todos e interrompe
+            if (!errosFormato.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Erro de Entrada", "Corrija os campos com formato inválido:\n" + String.join("\n", errosFormato));
                 return;
             }
 
-            String placa = txtPlaca.getText().trim();
+            // A partir daqui, os formatos básicos foram validados. Procede com a lógica de negócio.
             String usuarioRegistro = txtUsuarioRegistro.getText().trim();
 
-            LocalDateTime dataHoraSinistro = null;
-            if (!txtDataHoraSinistro.getText().trim().isEmpty()) {
-                dataHoraSinistro = LocalDateTime.parse(txtDataHoraSinistro.getText().trim(), DATE_TIME_FORMATTER);
-            }
+            // O valorSinistro pode ser nulo se o campo estiver vazio e a validação acima não for rigorosa sobre obrigatoriedade
+            // Ajuste conforme a regra de negócio se valorSinistro é opcional ou sempre obrigatório.
+            // Se sempre obrigatório, a verificação `isEmpty()` já pegou.
+            // Usamos doubleValue() para o construtor de DadosSinistro, como antes.
+            double valorSinistroDouble = (valorSinistro != null) ? valorSinistro.doubleValue() : 0.0;
 
-            double valorSinistro = 0.0;
-            if (!txtValorSinistro.getText().trim().isEmpty()) {
-                String cleanValor = txtValorSinistro.getText().trim().replace(".", "").replace(",", ".");
-                valorSinistro = Double.parseDouble(cleanValor);
-            }
 
             TipoSinistro tipoSinistroSelecionado = cmbTipoSinistro.getSelectionModel().getSelectedItem();
             int codigoTipoSinistro = (tipoSinistroSelecionado != null) ? tipoSinistroSelecionado.getCodigo() : 0;
 
-            DadosSinistro dados = new DadosSinistro(placa, dataHoraSinistro, usuarioRegistro, valorSinistro, codigoTipoSinistro);
+            DadosSinistro dados = new DadosSinistro(placa, dataHoraSinistro, usuarioRegistro, valorSinistroDouble, codigoTipoSinistro);
 
+            // A chamada ao mediator ainda pode lançar ExcecaoValidacaoDados para regras de negócio mais complexas
             String numeroSinistro = mediator.incluirSinistro(dados, LocalDateTime.now());
 
             showAlert(Alert.AlertType.INFORMATION, "Sucesso", "Sinistro incluído com sucesso! Anote o número do sinistro: " + numeroSinistro);
             limparCampos();
 
         } catch (ExcecaoValidacaoDados e) {
+            // Este catch ainda é para erros de validação de negócio que vêm do mediator
             String mensagensErro = String.join("\n", e.getMensagens());
             showAlert(Alert.AlertType.ERROR, "Erro de Validação", "Problemas na inclusão do sinistro:\n" + mensagensErro);
-        } catch (DateTimeParseException e) {
-            showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Data/Hora do sinistro inválida. Use o formato dd/MM/yyyy HH:mm:ss.");
-            txtDataHoraSinistro.setStyle("-fx-border-color: red;");
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Valor do sinistro inválido. Use apenas números, vírgula para centavos e ponto para milhares (opcional).");
-            txtValorSinistro.setStyle("-fx-border-color: red;");
         } catch (Exception e) {
+            // Catch para erros inesperados
             showAlert(Alert.AlertType.ERROR, "Erro Inesperado", "Ocorreu um erro inesperado: " + e.getMessage());
             e.printStackTrace();
         }
@@ -281,23 +319,28 @@ public class TelaInclusaoSinistroFX extends Application {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+
+        alert.getDialogPane().setMinWidth(1000);
+
+
+
+
         alert.showAndWait();
     }
 
-    public static void main(String[] args) { // Este main lançará esta aplicação diretamente
-        // Inicializa as DAOs e adiciona alguns dados de exemplo para teste
+    public static void main(String[] args) {
         try {
-            // Instancie os DAOs que serão usados para incluir dados de teste
+
             VeiculoDAO veiculoDAO = new VeiculoDAO();
             ApoliceDAO apoliceDAO = new ApoliceDAO();
             SeguradoPessoaDAO segPesDAO = new SeguradoPessoaDAO();
-            SeguradoEmpresaDAO segEmpDAO = new SeguradoEmpresaDAO(); // Adicionado para inicialização, se necessário
+            SeguradoEmpresaDAO segEmpDAO = new SeguradoEmpresaDAO();
 
-            // --- Dados de Teste para Sinistro (para testar inclusão de sinistro) ---
-            // Crie um endereço e segurado de exemplo
+
             Endereco enderecoExemplo = new Endereco("Rua Exemplo", "50000-000", "123", "Ap. 101", "Brasil", "PE", "Recife");
 
-            // Crie uma instância de SeguradoPessoa (que é uma subclasse concreta de Segurado)
+
             SeguradoPessoa seguradoPessoaTeste = new SeguradoPessoa( "Carlos Teste", enderecoExemplo, LocalDate.of(1980, 1, 1), new BigDecimal("100.00"),"98765432100",10000);
             if (segPesDAO.buscar(seguradoPessoaTeste.getIdUnico()) == null) {
                 if (segPesDAO.incluir(seguradoPessoaTeste)) {
@@ -321,9 +364,7 @@ public class TelaInclusaoSinistroFX extends Application {
                 System.out.println("Veículo ABC1234 já existe.");
             }
 
-            // Crie uma apólice vigente para o veículo de exemplo e inclua no DAO
-            // Data atual: Monday, June 2, 2025 at 5:31:19 PM -03.
-            // A apólice deve ser vigente para a data atual (02/06/2025).
+
             Apolice apoliceExemplo = new Apolice(
                     "APOLICE001",
                     veiculoExemplo,

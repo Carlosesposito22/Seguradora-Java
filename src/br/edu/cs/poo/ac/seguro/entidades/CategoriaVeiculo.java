@@ -3,10 +3,10 @@ import static br.edu.cs.poo.ac.seguro.entidades.PrecosAnosCategoria.*;
 public enum CategoriaVeiculo {
 
 
-    BASICO(1,"Veículo econômico", PA_BASICO),
-    INTERMEDIARIO(2,"Veículo de categoria média", PA_INTERMEDIARIO),
+    BASICO(1,"Veículo basico", PA_BASICO),
+    INTERMEDIARIO(2,"Veículo de categoria intermediaria", PA_INTERMEDIARIO),
     LUXO(3, "Veículo de luxo", PA_LUXO),
-    SUPER_LUXO(4, "Veículo exclusivo", PA_SUPER_LUXO),
+    SUPER_LUXO(4, "Veículo de super luxo", PA_SUPER_LUXO),
     ESPORTIVO(5, "Veículo esportivo", PA_ESPORTIVO);
 
     private int codigo;

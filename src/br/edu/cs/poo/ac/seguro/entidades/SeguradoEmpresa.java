@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 public class SeguradoEmpresa extends Segurado implements Serializable{
 
-    private static final long serialVersionUID = 1L;
+
 
     private String cnpj;
     private double faturamento;

@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Apolice implements Serializable, Registro{
 
-    private static final long serialVersionUID = 1L;
+
 
     private String numero;
     private Veiculo veiculo;

@@ -7,7 +7,7 @@ import java.time.Period;
 
 public abstract class Segurado implements Serializable, Registro{
 
-    private static final long serialVersionUID = 1L;
+
 
     private String nome;
     private Endereco endereco;

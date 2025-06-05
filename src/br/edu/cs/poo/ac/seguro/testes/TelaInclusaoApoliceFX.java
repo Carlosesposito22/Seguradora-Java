@@ -1,4 +1,4 @@
-package br.edu.cs.poo.ac.seguro.telas;
+package br.edu.cs.poo.ac.seguro.testes;
 
 import br.edu.cs.poo.ac.seguro.mediators.ApoliceMediator;
 import br.edu.cs.poo.ac.seguro.mediators.DadosVeiculo;
@@ -80,7 +80,7 @@ public class TelaInclusaoApoliceFX extends Application {
         txtPlaca = new TextField();
         txtPlaca.setPromptText("Ex: ABC1234");
         txtPlaca.setMaxWidth(100);
-        setupPlateMaskAndValidation(txtPlaca);
+
 
         txtAno = new TextField();
         txtAno.setPromptText("Ex: 2023");
@@ -410,7 +410,7 @@ public class TelaInclusaoApoliceFX extends Application {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.getDialogPane().setMinWidth(1000); // Added for better readability of longer error messages
+        alert.getDialogPane().setMinWidth(600); // Added for better readability of longer error messages
         alert.showAndWait();
     }
 

@@ -1,4 +1,4 @@
-package br.edu.cs.poo.ac.seguro.testes;
+package br.edu.cs.poo.ac.seguro.telas;
 
 import br.edu.cs.poo.ac.seguro.mediators.ApoliceMediator;
 import br.edu.cs.poo.ac.seguro.mediators.DadosVeiculo;
@@ -410,7 +410,7 @@ public class TelaInclusaoApoliceFX extends Application {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.getDialogPane().setMinWidth(1000);
+        alert.getDialogPane().setMinWidth(1000); // Added for better readability of longer error messages
         alert.showAndWait();
     }
 

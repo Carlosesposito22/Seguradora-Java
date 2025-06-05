@@ -44,11 +44,11 @@ public class SinistroMediator {
 		}
 
 		if (dados.getPlaca() == null || dados.getPlaca().trim().isEmpty()) {
-			excecao.getMensagens().add("Placa do Veículo deve ser informada");
+			excecao.getMensagens().add("Placa do Veiculo deve ser informada");
 		}
 
 		if (dados.getUsuarioRegistro() == null || dados.getUsuarioRegistro().trim().isEmpty()) {
-			excecao.getMensagens().add("Usuário do registro de sinistro deve ser informado");
+			excecao.getMensagens().add("Usuario do registro de sinistro deve ser informado");
 		}
 
 		if (dados.getValorSinistro() <= 0) {
@@ -63,7 +63,7 @@ public class SinistroMediator {
 			}
 		}
 		if (!tipoValido) {
-			excecao.getMensagens().add("Código do tipo de sinistro inválido");
+			excecao.getMensagens().add("Codigo do tipo de sinistro invalido");
 		}
 
 		Veiculo veiculo = null;
@@ -72,7 +72,7 @@ public class SinistroMediator {
 		if (dados.getPlaca() != null && !dados.getPlaca().trim().isEmpty()) {
 			veiculo = daoVeiculo.buscar(dados.getPlaca());
 			if (veiculo == null) {
-				excecao.getMensagens().add("Veículo não cadastrado");
+				excecao.getMensagens().add("Veiculo não cadastrado");
 			} else if (dados.getDataHoraSinistro() != null && dados.getDataHoraSinistro().isBefore(dataHoraAtual)) {
 				Apolice[] apolicesArray = Optional.ofNullable(daoApolice.buscarTodos()).orElse(new Apolice[0]);
 				List<Apolice> apolices = Arrays.asList(apolicesArray);
@@ -89,9 +89,9 @@ public class SinistroMediator {
 						.orElse(null);
 
 				if (apoliceVigente == null) {
-					excecao.getMensagens().add("Não existe apólice vigente para o veículo");
+					excecao.getMensagens().add("Nao existe apolice vigente para o veiculo");
 				} else if (dados.getValorSinistro() > apoliceVigente.getValorMaximoSegurado().doubleValue()) {
-					excecao.getMensagens().add("Valor do sinistro não pode ultrapassar o valor máximo segurado constante na apólice");
+					excecao.getMensagens().add("Valor do sinistro nao pode ultrapassar o valor maximo segurado constante na apolice");
 				}
 			}
 		}
